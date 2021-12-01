@@ -21,7 +21,7 @@ defmodule A2020.Fifteen do
     init_list
     |> Enum.with_index()
     |> Enum.map(fn {v, i} ->
-      # IO.puts("Turn #{i + 1} is #{v} =====================")
+      IO.puts("Turn #{i + 1} is #{v} =====================")
       {v, i}
     end)
     |> Enum.reduce(%{}, fn {v, i}, map -> Map.put(map, v, i) end)
@@ -29,12 +29,12 @@ defmodule A2020.Fifteen do
   end
 
   def find_2020(_map, max, max, val) do
-    # IO.puts("Turn 2020 is #{val} =====================")
+    IO.puts("Turn 2020 is #{val} =====================")
     val
   end
 
   def find_2020(map, max, turn, val) do
-    # IO.puts("Turn #{turn + 1} is #{val} =====================")
+    IO.puts("Turn #{turn + 1} is #{val} =====================")
 
     new_val =
       case Map.fetch(map, val) do
