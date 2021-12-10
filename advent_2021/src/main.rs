@@ -1,4 +1,5 @@
 #![feature(drain_filter)]
+use std::fmt;
 use std::io::prelude::*;
 use std::str::Chars;
 use structopt::StructOpt;
@@ -30,6 +31,9 @@ fn main() {
         ("day2", "2") => ex2_2(),
         ("day3", "1") => ex3_1(),
         ("day3", "2") => ex3_2(),
+        ("day4", "1") => ex4_1(),
+        ("day4", "2") => ex4_2(),
+        // ("day4", "2") => ex4_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -234,7 +238,9 @@ fn ex3_filter_most_values(mut vec: Vec<String>) -> i32 {
     while vec.len() > 1 {
         let (mcb, _lcb) = ex3_find_most_least_bits_at(&vec, i);
         start = format!("{}{}", &start, mcb);
-        vec = vec.drain_filter(|line| line.starts_with(&start)).collect::<Vec<_>>();
+        vec = vec
+            .drain_filter(|line| line.starts_with(&start))
+            .collect::<Vec<_>>();
 
         i = i + 1;
     }
@@ -250,7 +256,9 @@ fn ex3_filter_least_values(mut vec: Vec<String>) -> i32 {
     while vec.len() > 1 {
         let (_mcb, lcb) = ex3_find_most_least_bits_at(&vec, i);
         start = format!("{}{}", &start, lcb);
-        vec = vec.drain_filter(|line| line.starts_with(&start)).collect::<Vec<_>>();
+        vec = vec
+            .drain_filter(|line| line.starts_with(&start))
+            .collect::<Vec<_>>();
 
         i = i + 1;
     }
@@ -275,3 +283,203 @@ fn ex3_string_to_vec(list: &String) -> Vec<i32> {
     vec
 }
 
+#[derive(Debug)]
+struct GridCell(i32, bool);
+type GridLine = Vec<GridCell>;
+type Grid = Vec<GridLine>;
+
+fn ex4_1() -> Result<i32, String> {
+    let numbers = ex4_get_numbers();
+    // println!("{:?}", numbers);
+
+    let mut grids = ex4_get_grids();
+
+    for i in numbers {    
+        // println!("\n\n");
+        // println!("=================================");
+        // println!("Current number : {}", i);
+        let mut new_grids = Vec::new();
+        for grid in grids {
+            let new_grid = ex4_check_number(grid, i);
+            if ex4_check_grid(&new_grid) {
+                println!("youpi");
+                ex4_println_grid(&new_grid);
+                let sum = ex4_sum_unmarked_numbers(&new_grid);
+                return Ok(sum * i);
+            }
+            // ex4_println_grid(&new_grid);
+            // println!("---------------------------");
+            new_grids.push(new_grid);
+        }
+        grids = new_grids;
+    }
+
+    Err("Failed".to_string())
+}
+fn ex4_2() -> Result<i32, String> {
+    let numbers = ex4_get_numbers();
+    // println!("{:?}", numbers);
+
+    let mut grids = ex4_get_grids();
+    let mut last_result: i32 = 0;
+
+    for i in numbers {    
+        // println!("\n\n");
+        // println!("=================================");
+        // println!("Current number : {}", i);
+        let mut new_grids = Vec::new();
+        for grid in grids {
+            let new_grid = ex4_check_number(grid, i);
+            if ex4_check_grid(&new_grid) {
+                println!("youpi");
+                ex4_println_grid(&new_grid);
+                last_result = ex4_sum_unmarked_numbers(&new_grid) * i;
+            } else {
+                new_grids.push(new_grid);
+            }
+        }
+        grids = new_grids;
+    }
+
+    Ok(last_result)
+}
+
+fn ex4_get_numbers() -> Vec<i32> {
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => input
+            .trim()
+            .split(",")
+            .map(|x| x.parse().unwrap())
+            .collect(),
+        _ => panic!("ouch"),
+    }
+}
+
+fn ex4_get_grids() -> Vec<Grid> {
+    let mut grids = Vec::new();
+
+    loop {
+        match ex4_get_grid() {
+            Some(grid) => grids.push(grid),
+            _ => return grids,
+        }
+    }
+}
+
+// fn ex4_get_grid() -> Option<Vec<(bool, i32)>> {
+fn ex4_get_grid() -> Option<Grid> {
+    let mut input = String::new();
+
+    // Here, find next non empty line
+    while input == String::from("") {
+        match std::io::stdin().read_line(&mut input) {
+            Ok(0) => return None,
+            Ok(_) => input = input.trim().to_string(),
+            Err(_) => return None,
+        }
+    }
+
+    // Build grid
+    let mut grid: Grid = Vec::new();
+    while input != String::from("") {
+        grid.push(ex4_build_line(input.clone()));
+
+        input = String::new();
+        match std::io::stdin().read_line(&mut input) {
+            Ok(_) => input = input.trim().to_string(),
+            Err(_) => return None,
+        }
+    }
+
+    Some(grid)
+}
+
+fn ex4_build_line(input: String) -> GridLine {
+    let mut line: GridLine = Vec::new();
+
+    for s in input.split_whitespace() {
+        let cell = GridCell(s.parse().unwrap(), false);
+        line.push(cell)
+    }
+
+    line
+}
+
+fn ex4_println_grid(grid: &Grid) -> () {
+    for line in grid {
+        for cell in line {
+            print!("{}{}", cell, '\t');
+        }
+        println!("");
+    }
+
+    ()
+}
+
+fn ex4_check_number(grid: Grid, number: i32) -> Grid {
+    let mut new_grid = Vec::new();
+
+    for line in grid {
+        let mut new_line = Vec::new();
+        for cell in line {
+            if number == cell.0 {
+                new_line.push(GridCell(cell.0, true))
+            } else {
+                new_line.push(GridCell(cell.0, cell.1))
+            }
+        }
+        new_grid.push(new_line);
+    }
+
+    new_grid
+}
+
+impl fmt::Display for GridCell {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+        if self.1 {
+            write!(f, "_{}_", self.0)
+        } else {
+            write!(f, "{}", self.0)
+        }
+    }
+}
+
+fn ex4_check_grid(grid: &Grid) -> bool {
+    for i in 0..5 {
+        let mut hcheck = true;
+        let mut vcheck = true;
+        for j in 0..5 {
+            // println!("CELL ({},{}) = {}  [{} - {:?}]", j, i, grid[j][i], grid[j][i].0, grid[j][i].1);
+            // println!("vcheck was {:?}, now is {:?}", vcheck, vcheck && grid[j][i].1);
+            // println!("CELL ({},{}) = {}  [{} - {:?}]", i, j, grid[i][j], grid[i][j].0, grid[i][j].1);
+            // println!("hcheck was {:?}, now is {:?}", hcheck, hcheck && grid[i][j].1);
+       
+            hcheck = hcheck && grid[i][j].1;
+            vcheck = vcheck && grid[j][i].1;
+        }
+        if hcheck || vcheck {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn ex4_sum_unmarked_numbers(grid: &Grid) -> i32 {
+    let mut sum = 0;
+    for line in grid {
+        for cell in line {
+            if !cell.1 {
+                sum = sum + cell.0
+            }
+        }
+    }
+
+    sum
+}
