@@ -1,4 +1,5 @@
 #![feature(drain_filter)]
+use std::cmp;
 use std::fmt;
 use std::io::prelude::*;
 use std::str::Chars;
@@ -33,7 +34,8 @@ fn main() {
         ("day3", "2") => ex3_2(),
         ("day4", "1") => ex4_1(),
         ("day4", "2") => ex4_2(),
-        // ("day4", "2") => ex4_2(),
+        ("day5", "1") => ex5_1(),
+        ("day5", "2") => ex5_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -294,7 +296,7 @@ fn ex4_1() -> Result<i32, String> {
 
     let mut grids = ex4_get_grids();
 
-    for i in numbers {    
+    for i in numbers {
         // println!("\n\n");
         // println!("=================================");
         // println!("Current number : {}", i);
@@ -323,7 +325,7 @@ fn ex4_2() -> Result<i32, String> {
     let mut grids = ex4_get_grids();
     let mut last_result: i32 = 0;
 
-    for i in numbers {    
+    for i in numbers {
         // println!("\n\n");
         // println!("=================================");
         // println!("Current number : {}", i);
@@ -459,7 +461,7 @@ fn ex4_check_grid(grid: &Grid) -> bool {
             // println!("vcheck was {:?}, now is {:?}", vcheck, vcheck && grid[j][i].1);
             // println!("CELL ({},{}) = {}  [{} - {:?}]", i, j, grid[i][j], grid[i][j].0, grid[i][j].1);
             // println!("hcheck was {:?}, now is {:?}", hcheck, hcheck && grid[i][j].1);
-       
+
             hcheck = hcheck && grid[i][j].1;
             vcheck = vcheck && grid[j][i].1;
         }
@@ -482,4 +484,191 @@ fn ex4_sum_unmarked_numbers(grid: &Grid) -> i32 {
     }
 
     sum
+}
+
+type DiagramLine = Vec<i32>;
+type Diagram = Vec<DiagramLine>;
+
+fn ex5_1() -> Result<i32, String> {
+    let diagram = ex5_build_diagram();
+    // ex5_print_diagram(&diagram);
+
+    Ok(ex5_count_overlap(&diagram))
+}
+
+fn ex5_2() -> Result<i32, String> {
+    let diagram = ex5_build_diagram2();
+    // ex5_print_diagram(&diagram);
+
+    Ok(ex5_count_overlap(&diagram))
+}
+
+fn ex5_print_diagram(diagram: &Diagram) -> () {
+    for line in diagram {
+        for i in line {
+            if i == &0 {
+                print!(".");
+            } else {
+                print!("{}", i);
+            }
+        }
+        println!("");
+    }
+}
+
+fn ex5_build_diagram() -> Diagram {
+    let mut diagram: Diagram = Vec::new();
+    diagram.push(Vec::new());
+    let mut input = String::new();
+
+    loop {
+        match std::io::stdin().read_line(&mut input) {
+            Ok(0) => return diagram,
+            Ok(_) => diagram = ex5_update_diagram(diagram, input.trim().to_string()),
+            Err(_) => return diagram,
+        };
+        input = String::new();
+    }
+}
+
+fn ex5_update_diagram(mut diagram: Diagram, input: String) -> Diagram {
+    let (x1, y1, x2, y2) = ex5_parse_input(input);
+    let mut new_diagram: Diagram = Vec::new();
+
+    if x1 == x2 || y1 == y2 {
+        // Resize diagram
+        let max_y = cmp::max(cmp::max(y1, y2) + 1, diagram.len());
+        let max_x = if diagram.len() > 0 {
+            cmp::max(cmp::max(x1, x2) + 1, diagram[0].len())
+        } else {
+            cmp::max(x1, x2)
+        };
+
+        diagram.resize_with(max_y, || Vec::new());
+        for mut line in diagram {
+            line.resize(max_x, 0);
+            new_diagram.push(line);
+        }
+
+        // println!("{},{} -> {},{}", x1,y1, x2, y2);
+        if x1 == x2 {
+            let (a, b) = (cmp::min(y1, y2), cmp::max(y1, y2));
+            for i in a..b + 1 {
+                // println!("{}:{} == {}", i, x1, new_diagram[i][x1]);
+                new_diagram[i][x1] = new_diagram[i][x1] + 1;
+            }
+        } else {
+            let (a, b) = (cmp::min(x1, x2), cmp::max(x1, x2));
+            for j in a..b + 1 {
+                // println!("{}:{} == {}", y2, j, new_diagram[y2][j]);
+                new_diagram[y2][j] = new_diagram[y2][j] + 1;
+            }
+        }
+    } else {
+        return diagram;
+    }
+    // println!("{:?}", new_diagram);
+
+    new_diagram
+}
+
+fn ex5_build_diagram2() -> Diagram {
+    let mut diagram: Diagram = Vec::new();
+    diagram.push(Vec::new());
+    let mut input = String::new();
+
+    loop {
+        match std::io::stdin().read_line(&mut input) {
+            Ok(0) => return diagram,
+            Ok(_) => diagram = ex5_update_diagram2(diagram, input.trim().to_string()),
+            Err(_) => return diagram,
+        };
+        input = String::new();
+    }
+}
+
+fn ex5_update_diagram2(mut diagram: Diagram, input: String) -> Diagram {
+    let (x1, y1, x2, y2) = ex5_parse_input(input);
+    let mut new_diagram: Diagram = Vec::new();
+
+    // println!("{},{} -> {},{}", x1,y1, x2, y2);
+    let max_y = cmp::max(cmp::max(y1, y2) + 1, diagram.len());
+    let max_x = if diagram.len() > 0 {
+        cmp::max(cmp::max(x1, x2) + 1, diagram[0].len())
+    } else {
+        cmp::max(x1, x2)
+    };
+        diagram.resize_with(max_y, || Vec::new());
+        for mut line in diagram {
+            line.resize(max_x, 0);
+            new_diagram.push(line);
+        }
+
+    if x1 == x2 || y1 == y2 {
+
+        if x1 == x2 {
+            let (a, b) = (cmp::min(y1, y2), cmp::max(y1, y2));
+            for i in a..b + 1 {
+                // println!("{}:{} == {}", i, x1, new_diagram[i][x1]);
+                new_diagram[i][x1] = new_diagram[i][x1] + 1;
+            }
+        } else {
+            let (a, b) = (cmp::min(x1, x2), cmp::max(x1, x2));
+            for j in a..b + 1 {
+                // println!("{}:{} == {}", y2, j, new_diagram[y2][j]);
+                new_diagram[y2][j] = new_diagram[y2][j] + 1;
+            }
+        }
+    } else {
+        let range = ex5_build_range(x1, y1, x2, y2);
+
+        for (x, y) in range {
+            new_diagram[y][x] = new_diagram[y][x] + 1;
+        }
+    }
+    // println!("{:?}", new_diagram);
+
+    new_diagram
+}
+
+fn ex5_parse_input(input: String) -> (usize, usize, usize, usize) {
+    let result: Vec<usize> = input
+        .split(" -> ")
+        .map(|xy| {
+            xy.split(",")
+                .map(|i| i.parse().unwrap())
+                .collect::<Vec<usize>>()
+        })
+        .collect::<Vec<Vec<usize>>>()
+        .concat();
+
+    (result[0], result[1], result[2], result[3])
+}
+
+fn ex5_count_overlap(diagram: &Diagram) -> i32 {
+    diagram.iter().fold(0, |acc, line| {
+        line.iter()
+            .fold(acc, |acc, cell| if cell > &1 { acc + 1 } else { acc })
+    })
+}
+
+fn ex5_build_range(x1: usize, y1: usize, x2: usize, y2: usize) -> Vec<(usize, usize)> {
+    let mut i: i32 = 0;
+    let mut j: i32 = 0;
+    let dir_x: i32 = if x1 > x2 { -1 } else { 1 };
+    let dir_y: i32 = if y1 > y2 { -1 } else { 1 };
+
+    let mut vec = vec![(x1, y1)];
+    loop {
+        i = i + dir_x;
+        j = j + dir_y;
+        let x = (x1 as i32 + i) as usize;
+        let y = (y1 as i32 + j) as usize;
+
+        vec.push((x, y));
+
+        if (x as usize == x2) && (y == y2) {
+            return vec;
+        }
+    }
 }
