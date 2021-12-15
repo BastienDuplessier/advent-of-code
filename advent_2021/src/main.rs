@@ -42,7 +42,7 @@ fn main() {
     println!("{}", result.expect("no result"));
 }
 
-fn ex1_1() -> Result<i32, String> {
+fn ex1_1() -> Result<i64, String> {
     let stdin = std::io::stdin();
     let vec: Vec<i32> = stdin
         .lock()
@@ -64,10 +64,10 @@ fn ex1_1() -> Result<i32, String> {
             }
         });
 
-    Ok(res)
+    Ok(res as i64)
 }
 
-fn ex1_2() -> Result<i32, String> {
+fn ex1_2() -> Result<i64, String> {
     let stdin = std::io::stdin();
     let vec: Vec<i32> = stdin
         .lock()
@@ -90,10 +90,10 @@ fn ex1_2() -> Result<i32, String> {
             }
         });
 
-    Ok(res)
+    Ok(res as i64)
 }
 
-fn ex2_1() -> Result<i32, String> {
+fn ex2_1() -> Result<i64, String> {
     // let mut h_dist = 0;
     // let mut v_dist = 0;
 
@@ -112,10 +112,10 @@ fn ex2_1() -> Result<i32, String> {
 
     println!("h:{},v:{} = **{}", h, v, h * v);
 
-    Ok(h * v)
+    Ok((h * v) as i64)
 }
 
-fn ex2_2() -> Result<i32, String> {
+fn ex2_2() -> Result<i64, String> {
     let stdin = std::io::stdin();
     let (h, v, _) = stdin
         .lock()
@@ -136,7 +136,7 @@ fn ex2_2() -> Result<i32, String> {
 
     println!("h:{},v:{} = **{}", h, v, h * v);
 
-    Ok(h * v)
+    Ok((h * v) as i64)
 }
 
 fn ex2_parse(line: String) -> (char, i32) {
@@ -152,7 +152,7 @@ fn ex2_parse(line: String) -> (char, i32) {
     }
 }
 
-fn ex3_1() -> Result<i32, String> {
+fn ex3_1() -> Result<i64, String> {
     let stdin = std::io::stdin();
     let mut input = stdin.lock().lines().map(|x| x.unwrap());
 
@@ -163,10 +163,10 @@ fn ex3_1() -> Result<i32, String> {
 
     let (mcb, lcb) = ex3_count_bits(result);
 
-    Ok(ex3_vec_to_decimal(mcb) * ex3_vec_to_decimal(lcb))
+    Ok((ex3_vec_to_decimal(mcb) * ex3_vec_to_decimal(lcb)) as i64)
 }
 
-fn ex3_2() -> Result<i32, String> {
+fn ex3_2() -> Result<i64, String> {
     let stdin = std::io::stdin();
     let input: Vec<String> = stdin.lock().lines().map(|x| x.unwrap()).collect();
 
@@ -174,7 +174,7 @@ fn ex3_2() -> Result<i32, String> {
     let cgr = ex3_filter_least_values(input);
 
     println!("{} -- {}", ogr, cgr);
-    Ok(ogr * cgr)
+    Ok((ogr * cgr) as i64)
 }
 
 fn ex3_find_most_least_bits_at(vec: &Vec<String>, index: usize) -> (i32, i32) {
@@ -290,7 +290,7 @@ struct GridCell(i32, bool);
 type GridLine = Vec<GridCell>;
 type Grid = Vec<GridLine>;
 
-fn ex4_1() -> Result<i32, String> {
+fn ex4_1() -> Result<i64, String> {
     let numbers = ex4_get_numbers();
     // println!("{:?}", numbers);
 
@@ -307,7 +307,7 @@ fn ex4_1() -> Result<i32, String> {
                 println!("youpi");
                 ex4_println_grid(&new_grid);
                 let sum = ex4_sum_unmarked_numbers(&new_grid);
-                return Ok(sum * i);
+                return Ok((sum * i )as i64);
             }
             // ex4_println_grid(&new_grid);
             // println!("---------------------------");
@@ -318,7 +318,7 @@ fn ex4_1() -> Result<i32, String> {
 
     Err("Failed".to_string())
 }
-fn ex4_2() -> Result<i32, String> {
+fn ex4_2() -> Result<i64, String> {
     let numbers = ex4_get_numbers();
     // println!("{:?}", numbers);
 
@@ -343,7 +343,7 @@ fn ex4_2() -> Result<i32, String> {
         grids = new_grids;
     }
 
-    Ok(last_result)
+    Ok(last_result as i64)
 }
 
 fn ex4_get_numbers() -> Vec<i32> {
@@ -489,32 +489,32 @@ fn ex4_sum_unmarked_numbers(grid: &Grid) -> i32 {
 type DiagramLine = Vec<i32>;
 type Diagram = Vec<DiagramLine>;
 
-fn ex5_1() -> Result<i32, String> {
+fn ex5_1() -> Result<i64, String> {
     let diagram = ex5_build_diagram();
     // ex5_print_diagram(&diagram);
 
-    Ok(ex5_count_overlap(&diagram))
+    Ok(ex5_count_overlap(&diagram) as i64)
 }
 
-fn ex5_2() -> Result<i32, String> {
+fn ex5_2() -> Result<i64, String> {
     let diagram = ex5_build_diagram2();
     // ex5_print_diagram(&diagram);
 
-    Ok(ex5_count_overlap(&diagram))
+    Ok(ex5_count_overlap(&diagram) as i64)
 }
 
-fn ex5_print_diagram(diagram: &Diagram) -> () {
-    for line in diagram {
-        for i in line {
-            if i == &0 {
-                print!(".");
-            } else {
-                print!("{}", i);
-            }
-        }
-        println!("");
-    }
-}
+// fn ex5_print_diagram(diagram: &Diagram) -> () {
+//     for line in diagram {
+//         for i in line {
+//             if i == &0 {
+//                 print!(".");
+//             } else {
+//                 print!("{}", i);
+//             }
+//         }
+//         println!("");
+//     }
+// }
 
 fn ex5_build_diagram() -> Diagram {
     let mut diagram: Diagram = Vec::new();
