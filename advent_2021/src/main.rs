@@ -36,6 +36,8 @@ fn main() {
         ("day4", "2") => ex4_2(),
         ("day5", "1") => ex5_1(),
         ("day5", "2") => ex5_2(),
+        ("day6", "1") => ex6_1(),
+        ("day6", "2") => ex6_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -671,4 +673,68 @@ fn ex5_build_range(x1: usize, y1: usize, x2: usize, y2: usize) -> Vec<(usize, us
             return vec;
         }
     }
+}
+
+fn ex6_1() -> Result<i64, String> {
+    let mut vec = ex6_read_input();
+    for _ in 0..80 {
+        let mut new_vec = Vec::new();
+        for fish in vec {
+            if fish == 0 {
+                    new_vec.push(6);
+                    new_vec.push(8);
+            } else {
+                new_vec.push(fish - 1);
+            }
+        }
+        vec = new_vec;
+    };
+    Ok(vec.len() as i64)
+}
+
+fn ex6_2() -> Result<i64, String> {
+    let mut vec = ex6_convert_input(ex6_read_input());
+    for _ in 0..256 {
+        vec = ex6_update_vec(vec);
+    };
+
+    let mut sum = 0;
+    for i in vec {
+        sum = sum + i;
+    }
+
+    Ok(sum)
+}
+
+fn ex6_read_input() -> Vec<usize> {
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => input.trim().split(",").map(|x| x.parse().unwrap()).collect(),
+        Err(_) => Vec::new(),
+    }
+}
+
+fn ex6_convert_input(vec: Vec<usize>) -> Vec<i64> {
+    let mut new_vec = vec![0,0,0,0,0,0,0,0,0];
+
+    for i in vec {
+        new_vec[i] = new_vec[i] + 1
+    };
+
+    new_vec
+}
+
+fn ex6_update_vec(vec: Vec<i64>) -> Vec<i64> {
+    let mut new_vec = vec![0,0,0,0,0,0,0,0,0];
+
+    // Birth
+    new_vec[6] = vec[0];
+    new_vec[8] = vec[0];
+
+    // Decrease timer
+    for i in 1..9 {
+        new_vec[i-1] = new_vec[i-1] + vec[i]
+    }
+
+    new_vec
 }
