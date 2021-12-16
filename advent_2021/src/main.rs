@@ -38,6 +38,8 @@ fn main() {
         ("day5", "2") => ex5_2(),
         ("day6", "1") => ex6_1(),
         ("day6", "2") => ex6_2(),
+        ("day7", "1") => ex7_1(),
+        ("day7", "2") => ex7_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -740,4 +742,57 @@ fn ex6_update_vec(vec: Vec<i64>) -> Vec<i64> {
     }
 
     new_vec
+}
+
+fn ex7_1() -> Result<i64, String> {
+    let vec = ex7_read_input();
+    let max = &vec.iter().fold(0, |acc, x| cmp::max(acc, *x));
+
+    let mut best_cost = 1000000;
+
+    for i in 0..*max {
+        let mut cost = 0;
+        for pos in &vec {
+            cost = cost + (pos - i).abs();
+        }
+        // println!("best cost {} , cost is {}", i ,cost);
+        if best_cost > cost {
+            best_cost = cost;
+        }
+    }
+
+    Ok(best_cost as i64)
+}
+
+fn ex7_2() -> Result<i64, String> {
+    let vec = ex7_read_input();
+    let max = &vec.iter().fold(0, |acc, x| cmp::max(acc, *x));
+
+    let mut best_cost: i64 = 10000000000000000;
+
+    for i in 0..*max {
+        let mut cost = 0;
+        for pos in &vec {
+            let diff = (pos - i).abs();
+            cost = cost + (diff * (diff + 1) / 2);
+        }
+        // println!("best cost {} , cost is {}", i ,cost);
+        if best_cost > cost {
+            best_cost = cost;
+        }
+    }
+
+    Ok(best_cost as i64)
+}
+
+fn ex7_read_input() -> Vec<i64> {
+    let mut input = String::new();
+    match std::io::stdin().read_line(&mut input) {
+        Ok(_) => input
+            .trim()
+            .split(",")
+            .map(|x| x.parse().unwrap())
+            .collect(),
+        Err(_) => Vec::new(),
+    }
 }
