@@ -309,7 +309,7 @@ fn ex4_1() -> Result<i64, String> {
                 println!("youpi");
                 ex4_println_grid(&new_grid);
                 let sum = ex4_sum_unmarked_numbers(&new_grid);
-                return Ok((sum * i )as i64);
+                return Ok((sum * i) as i64);
             }
             // ex4_println_grid(&new_grid);
             // println!("---------------------------");
@@ -600,14 +600,13 @@ fn ex5_update_diagram2(mut diagram: Diagram, input: String) -> Diagram {
     } else {
         cmp::max(x1, x2)
     };
-        diagram.resize_with(max_y, || Vec::new());
-        for mut line in diagram {
-            line.resize(max_x, 0);
-            new_diagram.push(line);
-        }
+    diagram.resize_with(max_y, || Vec::new());
+    for mut line in diagram {
+        line.resize(max_x, 0);
+        new_diagram.push(line);
+    }
 
     if x1 == x2 || y1 == y2 {
-
         if x1 == x2 {
             let (a, b) = (cmp::min(y1, y2), cmp::max(y1, y2));
             for i in a..b + 1 {
@@ -681,14 +680,14 @@ fn ex6_1() -> Result<i64, String> {
         let mut new_vec = Vec::new();
         for fish in vec {
             if fish == 0 {
-                    new_vec.push(6);
-                    new_vec.push(8);
+                new_vec.push(6);
+                new_vec.push(8);
             } else {
                 new_vec.push(fish - 1);
             }
         }
         vec = new_vec;
-    };
+    }
     Ok(vec.len() as i64)
 }
 
@@ -696,7 +695,7 @@ fn ex6_2() -> Result<i64, String> {
     let mut vec = ex6_convert_input(ex6_read_input());
     for _ in 0..256 {
         vec = ex6_update_vec(vec);
-    };
+    }
 
     let mut sum = 0;
     for i in vec {
@@ -709,23 +708,27 @@ fn ex6_2() -> Result<i64, String> {
 fn ex6_read_input() -> Vec<usize> {
     let mut input = String::new();
     match std::io::stdin().read_line(&mut input) {
-        Ok(_) => input.trim().split(",").map(|x| x.parse().unwrap()).collect(),
+        Ok(_) => input
+            .trim()
+            .split(",")
+            .map(|x| x.parse().unwrap())
+            .collect(),
         Err(_) => Vec::new(),
     }
 }
 
 fn ex6_convert_input(vec: Vec<usize>) -> Vec<i64> {
-    let mut new_vec = vec![0,0,0,0,0,0,0,0,0];
+    let mut new_vec = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     for i in vec {
         new_vec[i] = new_vec[i] + 1
-    };
+    }
 
     new_vec
 }
 
 fn ex6_update_vec(vec: Vec<i64>) -> Vec<i64> {
-    let mut new_vec = vec![0,0,0,0,0,0,0,0,0];
+    let mut new_vec = vec![0, 0, 0, 0, 0, 0, 0, 0, 0];
 
     // Birth
     new_vec[6] = vec[0];
@@ -733,7 +736,7 @@ fn ex6_update_vec(vec: Vec<i64>) -> Vec<i64> {
 
     // Decrease timer
     for i in 1..9 {
-        new_vec[i-1] = new_vec[i-1] + vec[i]
+        new_vec[i - 1] = new_vec[i - 1] + vec[i]
     }
 
     new_vec
