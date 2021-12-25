@@ -1,5 +1,6 @@
 #![feature(drain_filter)]
 use std::cmp;
+use std::collections::HashMap;
 use std::fmt;
 use std::io::prelude::*;
 use std::str::Chars;
@@ -40,6 +41,8 @@ fn main() {
         ("day6", "2") => ex6_2(),
         ("day7", "1") => ex7_1(),
         ("day7", "2") => ex7_2(),
+        ("day8", "1") => ex8_1(),
+        ("day8", "2") => ex8_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -795,4 +798,160 @@ fn ex7_read_input() -> Vec<i64> {
             .collect(),
         Err(_) => Vec::new(),
     }
+}
+
+fn ex8_1() -> Result<i64, String> {
+    let input = ex8_parse_input1();
+
+    let mut count = 0;
+    for line in input {
+        count = count
+            + line.split(' ').fold(0, |acc, s| match s.len() {
+                2 | 3 | 4 | 7 => acc + 1,
+                _ => acc,
+            })
+    }
+
+    Ok(count)
+}
+
+fn ex8_2() -> Result<i64, String> {
+    let input = ex8_parse_input2();
+
+    let mut total = 0;
+    for (pattern, number) in input {
+        // println!("To find: {:?}", number);
+        let numbers = ex8_compute_pattern(pattern);
+        // println!("Numbers: {:?}", numbers);
+        let digits = ex8_to_digit(number, &numbers);
+        // println!("Digits: {:?}", digits);
+
+        total = total + digits.iter().fold(0, |acc, x| acc * 10 + x);
+        // println!("Total: {:?}", digits);
+        // count = count + line.split(' ').fold(0, |acc, s|
+        //                      match s.len() {
+        //                          2 | 3 | 4 | 7 => acc + 1,
+        //                              _ => acc
+        //                      }
+        // )
+    }
+
+    Ok(total as i64)
+}
+
+fn ex8_parse_input1() -> Vec<String> {
+    std::io::stdin()
+        .lock()
+        .lines()
+        .map(|x| String::from(x.unwrap().split('|').last().unwrap().trim()))
+        .collect()
+}
+
+fn ex8_parse_input2() -> Vec<(String, String)> {
+    std::io::stdin()
+        .lock()
+        .lines()
+        .map(|x| ex8_parse_line(x.unwrap()))
+        .collect()
+}
+
+fn ex8_parse_line(x: String) -> (String, String) {
+    let mut split = x.split('|');
+    let pattern = split.nth(0).unwrap().trim();
+    let number = split.last().unwrap().trim();
+    (String::from(pattern), String::from(number))
+}
+
+fn ex8_compute_pattern(pattern: String) -> HashMap<String, i64> {
+    let mut result = HashMap::new();
+    let mut reverse = HashMap::new();
+    let mut fivers = Vec::new();
+    let mut sixers = Vec::new();
+    let split = pattern.split(' ').map(|x| ex8_order_digit(x));
+
+    // Get basic digits
+    for digit in split {
+        match digit.len() {
+            2 => {
+                result.insert(1, digit.clone());
+                reverse.insert(digit, 1)
+            }
+            3 => {
+                result.insert(7, digit.clone());
+                reverse.insert(digit, 7)
+            }
+            4 => {
+                result.insert(4, digit.clone());
+                reverse.insert(digit, 4)
+            }
+            5 => {
+                fivers.push(digit);
+                None
+            }
+            6 => {
+                sixers.push(digit);
+                None
+            }
+            _ => {
+                result.insert(8, digit.clone());
+                reverse.insert(digit, 8)
+            }
+        };
+    }
+
+    // Find 0/6/9
+    for digit in sixers {
+        if ex8_matches(&digit, 1, &result) {
+            if ex8_matches(&digit, 4, &result) {
+                result.insert(9, digit.clone());
+                reverse.insert(digit, 9);
+            } else {
+                result.insert(0, digit.clone());
+                reverse.insert(digit, 0);
+            }
+        } else {
+            result.insert(6, digit.clone());
+            reverse.insert(digit, 6);
+        }
+    }
+
+    for digit in fivers {
+        if ex8_matches(&digit, 1, &result) {
+            reverse.insert(digit, 3);
+        } else {
+            if ex8_reverse_matches(&digit, 6, &result) {
+                reverse.insert(digit, 5);
+            } else {
+                reverse.insert(digit, 2);
+            }
+        }
+    }
+
+    reverse
+}
+
+fn ex8_order_digit(s: &str) -> String {
+    let mut vec: Vec<char> = s.chars().collect();
+    vec.sort();
+
+    String::from_iter(vec)
+}
+
+fn ex8_matches(digit: &String, i: i64, numbers: &HashMap<i64, String>) -> bool {
+    numbers[&i].chars().all(|c| ex8_char_match(digit, c))
+}
+
+fn ex8_reverse_matches(digit: &String, i: i64, numbers: &HashMap<i64, String>) -> bool {
+    digit.chars().all(|c| ex8_char_match(&numbers[&i], c))
+}
+
+fn ex8_char_match(a: &String, b: char) -> bool {
+    let v: Vec<&str> = a.matches(b).collect();
+    !v.is_empty()
+}
+
+fn ex8_to_digit(str: String, numbers: &HashMap<String, i64>) -> Vec<i64> {
+    str.split(' ')
+        .map(|x| numbers[&ex8_order_digit(x)])
+        .collect()
 }
