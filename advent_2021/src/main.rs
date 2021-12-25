@@ -43,6 +43,8 @@ fn main() {
         ("day7", "2") => ex7_2(),
         ("day8", "1") => ex8_1(),
         ("day8", "2") => ex8_2(),
+        ("day9", "1") => ex9_1(),
+        ("day9", "2") => ex9_2(),
         _ => Err(format!("could not get `{} {}`", day, part)),
     };
 
@@ -954,4 +956,155 @@ fn ex8_to_digit(str: String, numbers: &HashMap<String, i64>) -> Vec<i64> {
     str.split(' ')
         .map(|x| numbers[&ex8_order_digit(x)])
         .collect()
+}
+
+type MapLine = Vec<usize>;
+type Map = Vec<MapLine>;
+
+#[derive(Debug)]
+struct RichMap {
+    map: Map,
+    hsize: usize,
+    vsize: usize,
+}
+impl RichMap {
+    fn get(&self, i: &usize, j: &usize) -> Option<usize> {
+        if *i < self.hsize && *j < self.vsize {
+            Some(self.map[*i][*j])
+        } else {
+            None
+        }
+    }
+}
+
+type Coords = (usize, usize);
+type TraverseMap = HashMap<Coords, bool>;
+
+fn ex9_1() -> Result<i64, String> {
+    let map = ex9_parse_map();
+    let (hsize, vsize) = ex9_calc_sizes(&map);
+
+    let mut risk_level = 0;
+    for i in 0..hsize {
+        for j in 0..vsize {
+            if ex9_find_if_lowest(&map, &i, &j, &hsize, &vsize) {
+                risk_level = risk_level + 1 + map[i][j] as i64;
+            }
+        }
+    }
+
+    Ok(risk_level)
+}
+fn ex9_2() -> Result<i64, String> {
+    let map = ex9_build_rich_map(ex9_parse_map());
+    let (hsize, vsize) = (map.hsize, map.vsize);
+    let mut lowest = Vec::new();
+
+    for i in 0..hsize {
+        for j in 0..vsize {
+            if ex9_find_if_lowest(&map.map, &i, &j, &hsize, &vsize) {
+                let size = ex9_compute_size(&map, &i, &j);
+                lowest.push((i, j, size));
+            }
+        }
+    }
+
+    lowest.sort_by(|(_, _, a), (_, _, b)| b.cmp(a));
+
+    Ok(lowest[0].2 * lowest[1].2 * lowest[2].2)
+}
+
+fn ex9_parse_map() -> Map {
+    std::io::stdin()
+        .lock()
+        .lines()
+        .map(|x| {
+            x.unwrap()
+                .trim()
+                .chars()
+                .map(|c| c.to_digit(10).unwrap() as usize)
+                .collect()
+        })
+        .collect()
+}
+
+fn ex9_calc_sizes(map: &Map) -> (usize, usize) {
+    (map.len(), map[0].len())
+}
+
+fn ex9_find_if_lowest(map: &Map, i: &usize, j: &usize, maxi: &usize, maxj: &usize) -> bool {
+    let result = true;
+    // Up
+    if *i >= 1 {
+        if map[*i][*j] >= map[*i - 1][*j] {
+            return false;
+        }
+    }
+    // Left
+    if *j >= 1 {
+        if map[*i][*j] >= map[*i][*j - 1] {
+            return false;
+        }
+    }
+    // Down
+    if *i + 1 < *maxi {
+        if map[*i][*j] >= map[*i + 1][*j] {
+            return false;
+        }
+    }
+    // Right
+    if *j + 1 < *maxj {
+        if map[*i][*j] >= map[*i][*j + 1] {
+            return false;
+        }
+    }
+
+    result
+}
+
+fn ex9_compute_size(map: &RichMap, i: &usize, j: &usize) -> i64 {
+    let mut traversed: TraverseMap = HashMap::new();
+    traversed = ex9_traverse_map(map, *i, *j, traversed);
+    traversed
+        .values()
+        .fold(0, |a, x| if *x { a + 1 } else { a })
+}
+
+fn ex9_traverse_map(map: &RichMap, i: usize, j: usize, mut traversed: TraverseMap) -> TraverseMap {
+    if map.get(&i, &j) == None {
+        return traversed;
+    }
+    match traversed.get(&(i, j)) {
+        None => {
+            match map.get(&i, &j) {
+                Some(9) => {
+                    traversed.insert((i, j), false);
+                    return traversed;
+                }
+                Some(_) => traversed.insert((i, j), true),
+                _ => {
+                    traversed.insert((i, j), false);
+                    return traversed;
+                }
+            };
+            if i > 0 {
+                traversed = ex9_traverse_map(map, i - 1, j, traversed);
+            }
+            if j > 0 {
+                traversed = ex9_traverse_map(map, i, j - 1, traversed);
+            }
+            traversed = ex9_traverse_map(map, i + 1, j, traversed);
+            ex9_traverse_map(map, i, j + 1, traversed)
+        }
+        _ => traversed,
+    }
+}
+
+fn ex9_build_rich_map(map: Map) -> RichMap {
+    let (hsize, vsize) = ex9_calc_sizes(&map);
+    RichMap {
+        map: map,
+        hsize: hsize,
+        vsize: vsize,
+    }
 }
